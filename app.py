@@ -2,81 +2,101 @@ import streamlit as st
 import joblib
 import numpy as np
 
-st.set_page_config(page_title="Crop Recommendation System", page_icon="🌾", layout="centered")
+st.set_page_config(page_title='Crop Recommendation System', layout='centered')
 
 @st.cache_resource
-def load_model():
-    return joblib.load("crop_model.pkl")
+def get_model():
+    return joblib.load('crop_model.pkl')
 
-model = load_model()
+model = get_model()
 
-st.title("🌾 Crop Recommendation System")
-st.markdown("""
-Welcome to the **Crop Recommendation System**! 
-This web application helps farmers and agricultural experts determine the best crop to grow based on soil nutrients and local climatic conditions.
-Enter soil and climate parameters below or pick a preset from the sidebar, then click **Predict Crop**.
-""")
+st.title('AI-Powered Crop Recommendation System')
+st.markdown('Enter soil parameters and climate conditions below to get the best crop recommendation with confidence scores, detailed agronomic explanations, and fertilizer advice.')
 
-st.markdown("---")
-
-st.sidebar.header("🎯 Quick Sample Presets")
 preset_data = {
-    "Rice": [90.0, 42.0, 43.0, 20.88, 82.0, 6.5, 202.94],
-    "Maize": [71.0, 54.0, 16.0, 22.61, 63.69, 5.75, 87.76],
-    "Chickpea": [40.0, 72.0, 77.0, 17.02, 16.99, 7.49, 88.55],
-    "Cotton": [133.0, 47.0, 24.0, 24.40, 79.20, 7.23, 90.80],
-    "Coffee": [91.0, 21.0, 26.0, 26.33, 57.36, 7.26, 191.65]
+    'Rice': [90.0, 42.0, 43.0, 20.88, 82.0, 6.5, 202.94],
+    'Maize': [71.0, 54.0, 16.0, 22.61, 63.69, 5.75, 87.76],
+    'Chickpea': [40.0, 72.0, 77.0, 17.02, 16.99, 7.49, 88.55],
+    'Cotton': [133.0, 47.0, 24.0, 24.40, 79.20, 7.23, 90.80],
+    'Coffee': [91.0, 21.0, 26.0, 26.33, 57.36, 7.26, 191.65]
 }
 
-selected_preset = st.sidebar.selectbox("Choose a preset crop", ["-- Select Preset --"] + list(preset_data.keys()))
+sel = st.sidebar.selectbox('Choose a preset', ['-- None --'] + list(preset_data.keys()))
+p = preset_data.get(sel, [90.0, 42.0, 43.0, 20.88, 82.0, 6.5, 202.94])
 
-if selected_preset != "-- Select Preset --":
-    p_vals = preset_data[selected_preset]
-    default_n, default_p, default_k = p_vals[0], p_vals[1], p_vals[2]
-    default_temp, default_hum = p_vals[3], p_vals[4]
-    default_ph, default_rain = p_vals[5], p_vals[6]
-else:
-    default_n, default_p, default_k = 90.0, 42.0, 43.0
-    default_temp, default_hum = 20.88, 82.0
-    default_ph, default_rain = 6.5, 202.94
+n = st.number_input('Nitrogen (N)', 0.0, 150.0, p[0])
+phosphorus = st.number_input('Phosphorus (P)', 0.0, 150.0, p[1])
+k = st.number_input('Potassium (K)', 0.0, 205.0, p[2])
+temp = st.number_input('Temperature', 0.0, 60.0, p[3])
+hum = st.number_input('Humidity', 0.0, 100.0, p[4])
+ph = st.number_input('Soil pH', 0.0, 14.0, p[5])
+rain = st.number_input('Rainfall', 0.0, 400.0, p[6])
 
-col1, col2 = st.columns(2)
-
-with col1:
-    n_val = st.number_input("Nitrogen (N ratio in soil)", min_value=0.0, max_value=150.0, value=default_n, step=1.0)
-    p_val = st.number_input("Phosphorus (P ratio in soil)", min_value=0.0, max_value=150.0, value=default_p, step=1.0)
-    k_val = st.number_input("Potassium (K ratio in soil)", min_value=0.0, max_value=205.0, value=default_k, step=1.0)
-    temperature = st.number_input("Temperature (°C)", min_value=0.0, max_value=60.0, value=default_temp, step=0.1)
-
-with col2:
-    humidity = st.number_input("Relative Humidity (%)", min_value=0.0, max_value=100.0, value=default_hum, step=0.1)
-    ph = st.number_input("Soil pH value", min_value=0.0, max_value=14.0, value=default_ph, step=0.1)
-    rainfall = st.number_input("Rainfall (mm)", min_value=0.0, max_value=400.0, value=default_rain, step=0.1)
-
-st.markdown("")
-
-if st.button("Predict Crop", type="primary"):
-    input_data = np.array([[n_val, p_val, k_val, temperature, humidity, ph, rainfall]])
-    
-    prediction = model.predict(input_data)
-    probabilities = model.predict_proba(input_data)[0]
+if st.button('Predict Crop and Get Advice'):
+    data = np.array([[n, phosphorus, k, temp, hum, ph, rain]])
+    pred = model.predict(data)[0]
+    probs = model.predict_proba(data)[0]
     classes = model.classes_
+    conf = probs[model.classes_ == pred][0] * 100
     
-    top3_indices = probabilities.argsort()[-3:][::-1]
+    crop_display = pred.capitalize()
+    st.success('Recommended Crop: ' + crop_display + ' (Confidence: ' + f'{conf:.2f}%' + ')')
     
-    best_crop = prediction[0].capitalize()
-    best_confidence = probabilities[model.classes_ == prediction[0]][0] * 100
+    reasons = []
+    if rain > 200:
+        reasons.append('High rainfall (' + str(rain) + ' mm) supports water-intensive growth.')
+    elif rain < 100:
+        reasons.append('Moderate to low rainfall (' + str(rain) + ' mm) prevents waterlogging.')
+    else:
+        reasons.append('Balanced rainfall (' + str(rain) + ' mm) meets standard irrigation needs.')
+        
+    if temp > 25:
+        reasons.append('Warm temperature (' + str(temp) + ' C) accelerates metabolic processes.')
+    else:
+        reasons.append('Cooler temperature (' + str(temp) + ' C) suits temperate crop requirements.')
+        
+    if ph < 6.0:
+        reasons.append('Acidic soil pH (' + str(ph) + ') matches specific nutrient absorption needs.')
+    elif ph > 7.5:
+        reasons.append('Alkaline soil pH (' + str(ph) + ') provides suitable chemical balance.')
+    else:
+        reasons.append('Neutral soil pH (' + str(ph) + ') ensures optimal nutrient availability.')
+
+    reason_str = ' '.join(reasons)
+    explanation = 'Why this crop? ' + crop_display + ' was recommended because: ' + reason_str + ' Soil nutrient levels (N:' + str(n) + ', P:' + str(phosphorus) + ', K:' + str(k) + ') and humidity (' + str(hum) + '%) align with optimal historical thresholds.'
+    st.info(explanation)
     
-    st.success(f"🌱 **Top Recommended Crop**: **{best_crop}** (Confidence: **{best_confidence:.2f}%**)")
+    st.markdown('### Fertilizer Recommendation and Soil Correction Advisor')
+    fert_advice = []
+    if n < 50:
+        fert_advice.append('Nitrogen is low: Consider applying Urea or Ammonium Sulphate to boost vegetative growth.')
+    elif n > 120:
+        fert_advice.append('Nitrogen is high: Avoid excess nitrogen to prevent lodging.')
+    else:
+        fert_advice.append('Nitrogen level is optimal.')
+        
+    if phosphorus < 30:
+        fert_advice.append('Phosphorus is low: Apply Single Super Phosphate (SSP) or DAP to enhance root development.')
+    else:
+        fert_advice.append('Phosphorus level is optimal.')
+        
+    if k < 30:
+        fert_advice.append('Potassium is low: Apply Muriate of Potash (MOP) to improve disease resistance and grain filling.')
+    else:
+        fert_advice.append('Potassium level is optimal.')
+
+    if ph < 5.5:
+        fert_advice.append('Soil is acidic: Apply Agricultural Lime to raise pH towards neutral.')
+    elif ph > 8.0:
+        fert_advice.append('Soil is alkaline: Apply Gypsum or elemental sulfur to lower pH.')
+    else:
+        fert_advice.append('Soil pH is within healthy agricultural range.')
+        
+    for advice in fert_advice:
+        st.markdown('- ' + advice)
     
-    st.markdown("### 📊 Top-3 Crop Alternatives and Confidence Scores")
-    
-    for idx in top3_indices:
-        crop_name = classes[idx].capitalize()
-        conf = probabilities[idx] * 100
-        col_a, col_b = st.columns([2, 5])
-        with col_a:
-            st.markdown(f"**{crop_name}**")
-        with col_b:
-            st.progress(float(probabilities[idx]))
-        st.caption(f"Confidence: {conf:.2f}%")
+    st.markdown('### Top-3 Alternatives')
+    for i in probs.argsort()[-3:][::-1]:
+        alt_name = classes[i].capitalize()
+        alt_conf = probs[i] * 100
+        st.write(alt_name + ': ' + f'{alt_conf:.2f}%')
