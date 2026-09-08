@@ -24,13 +24,22 @@ preset_data = {
 sel = st.sidebar.selectbox('Choose a preset', ['-- None --'] + list(preset_data.keys()))
 p = preset_data.get(sel, [90.0, 42.0, 43.0, 20.88, 82.0, 6.5, 202.94])
 
-n = st.number_input('Nitrogen (N)', 0.0, 150.0, p[0])
-phosphorus = st.number_input('Phosphorus (P)', 0.0, 150.0, p[1])
-k = st.number_input('Potassium (K)', 0.0, 205.0, p[2])
-temp = st.number_input('Temperature', 0.0, 60.0, p[3])
-hum = st.number_input('Humidity', 0.0, 100.0, p[4])
-ph = st.number_input('Soil pH', 0.0, 14.0, p[5])
-rain = st.number_input('Rainfall', 0.0, 400.0, p[6])
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader('🧪 Soil Nutrients')
+    n = st.number_input('Nitrogen (N)', 0.0, 150.0, p[0])
+    phosphorus = st.number_input('Phosphorus (P)', 0.0, 150.0, p[1])
+    k = st.number_input('Potassium (K)', 0.0, 205.0, p[2])
+    ph = st.number_input('Soil pH', 0.0, 14.0, p[5])
+
+with col2:
+    st.subheader('🌦️ Climate & Weather')
+    temp = st.number_input('Temperature', 0.0, 60.0, p[3])
+    hum = st.number_input('Humidity', 0.0, 100.0, p[4])
+    rain = st.number_input('Rainfall', 0.0, 400.0, p[6])
+
+st.markdown('')
 
 if st.button('Predict Crop and Get Advice'):
     data = np.array([[n, phosphorus, k, temp, hum, ph, rain]])
@@ -95,8 +104,13 @@ if st.button('Predict Crop and Get Advice'):
     for advice in fert_advice:
         st.markdown('- ' + advice)
     
-    st.markdown('### Top-3 Alternatives')
+    st.markdown('### 📊 Top-3 Alternatives & Confidence Breakdown')
     for i in probs.argsort()[-3:][::-1]:
         alt_name = classes[i].capitalize()
         alt_conf = probs[i] * 100
-        st.write(alt_name + ': ' + f'{alt_conf:.2f}%')
+        col_name, col_bar = st.columns([1, 4])
+        with col_name:
+            st.markdown('**' + alt_name + '**')
+        with col_bar:
+            st.progress(float(probs[i]))
+            st.caption('Confidence: ' + f'{alt_conf:.2f}%')
