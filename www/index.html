@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2e7d32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Crop Recommendation System</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f3f7f1;--card:#fff;--ink:#1d2b1f;--mute:#5d6b5f;--g:#2e7d32;--g2:#1b5e20;--line:#dfe8dc;--warn:#b26a00;--warnbg:#fff4e0;--okbg:#e8f5e9;--tr:#e3ebe0}
+@media(prefers-color-scheme:dark){:root{--bg:#10170f;--card:#182217;--ink:#e6efe4;--mute:#9db09b;--g:#66bb6a;--g2:#43a047;--line:#2a3a29;--warn:#ffb74d;--warnbg:#33290f;--okbg:#14301a;--tr:#2a3a29}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{background:linear-gradient(135deg,var(--g2),var(--g));color:#fff;padding:20px 18px 22px;text-align:center}
+header h1{margin:0;font-size:1.3rem}
+header p{margin:6px auto 0;max-width:620px;font-size:.9rem;opacity:.92}
+nav{display:flex;position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.tab{flex:1;border:0;background:transparent;color:var(--mute);padding:13px 6px;font-size:.92rem;font-weight:600;cursor:pointer;border-bottom:3px solid transparent}
+.tab.on{color:var(--g);border-bottom-color:var(--g)}
+main{max-width:860px;margin:0 auto;padding:16px 14px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+h2{font-size:1rem;margin:0 0 10px}
+.hint{color:var(--mute);font-size:.85rem;margin:8px 0 0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 14px;border-radius:999px;font-size:.9rem;cursor:pointer}
+.chip.on{background:var(--g);border-color:var(--g);color:#fff}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:640px){.grid{grid-template-columns:1fr 1fr}}
+.field label{display:block;font-weight:600;font-size:.92rem;margin-bottom:4px}
+.unit{color:var(--mute);font-weight:400}
+.row{display:flex;gap:10px;align-items:center}
+input[type=range]{flex:1;accent-color:var(--g);min-width:0}
+input[type=number],input[type=text],select{padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:1rem}
+input[type=number]{width:92px}
+.sec{font-weight:700;margin:4px 0 12px}
+button.go{width:100%;margin-top:6px;padding:15px;border:0;border-radius:14px;background:var(--g);color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer}
+button.go:active{background:var(--g2)}
+button.alt{padding:10px 14px;border:1px solid var(--g);border-radius:10px;background:transparent;color:var(--g);font-weight:700;font-size:.95rem;cursor:pointer}
+.wrow{display:flex;gap:8px;margin-top:10px}
+.wrow input{flex:1;min-width:0}
+.wstatus{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--tr);font-size:.9rem}
+.wstatus.ok{background:var(--okbg)}.wstatus.err{background:var(--warnbg);color:var(--warn)}
+#cityResults{display:flex;flex-direction:column;gap:6px;margin-top:8px;align-items:flex-start}
+.err{background:var(--warnbg);color:var(--warn);padding:10px 12px;border-radius:10px;margin-top:10px}
+.hero{display:flex;align-items:center;gap:14px}
+.hero .e{font-size:3rem;line-height:1}
+.hero .c{font-size:1.6rem;font-weight:800}
+.hero .p{color:var(--g);font-weight:600}
+.why{background:var(--okbg);padding:12px;border-radius:12px;margin:12px 0 0;font-size:.93rem}
+ul{padding-left:0;margin:0;list-style:none}
+li{padding:9px 12px;border-radius:10px;margin-bottom:6px;font-size:.93rem}
+li.ok{background:var(--okbg)} li.warn{background:var(--warnbg);color:var(--warn)}
+.bar{display:grid;grid-template-columns:96px 1fr 64px;gap:10px;align-items:center;margin-bottom:8px;font-size:.9rem}
+.bn{font-weight:700}.bp{text-align:right;color:var(--mute)}
+.bt{height:12px;background:var(--tr);border-radius:99px;overflow:hidden}.bf{height:100%;background:var(--g);border-radius:99px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+.badge{padding:3px 11px;border-radius:99px;font-size:.8rem;font-weight:700;background:var(--tr);color:var(--ink)}
+.badge.kharif{background:#d8efd9;color:#1b5e20}.badge.rabi{background:#fff0c9;color:#7a5200}
+.badge.zaid{background:#ffe0d6;color:#a13a12}.badge.perennial{background:#dbe7ff;color:#1c4a9a}
+.badge.sownow{background:var(--g);color:#fff;margin-left:auto}
+@media(prefers-color-scheme:dark){.badge.kharif,.badge.rabi,.badge.zaid,.badge.perennial{color:#10170f}}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:.93rem}
+.kv span{color:var(--mute)}.kv b{text-align:right}
+.now{padding:10px 12px;border-radius:10px;margin-top:10px;font-size:.92rem}
+.now.ok{background:var(--okbg)}.now.warn{background:var(--warnbg);color:var(--warn)}
+.areaRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.areaRow label{font-weight:600;font-size:.92rem}
+.scroll{overflow-x:auto;margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mute);font-weight:600}td.gap{color:var(--warn);font-weight:700}
+.crop{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--card)}
+.ch{display:flex;align-items:center;gap:8px;font-size:1.05rem}.ce{font-size:1.5rem}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--okbg);border-radius:12px;padding:12px;text-align:center}
+.sv{font-size:1.4rem;font-weight:800;color:var(--g)}.sl{font-size:.8rem;color:var(--mute)}
+p{margin:8px 0}
+footer{text-align:center;color:var(--mute);font-size:.8rem;padding:6px 14px 24px}
+
+/* ---- auth ---- */
+body.locked>header,body.locked>nav,body.locked>main,body.locked>footer{display:none}
+#auth{display:none;min-height:100vh;min-height:100dvh;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,var(--g2),var(--g))}
+body.locked #auth{display:flex}
+.acard{width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:26px 22px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.acard .logo{font-size:2.4rem;text-align:center;line-height:1}
+.acard h2{text-align:center;font-size:1.3rem;margin:10px 0 2px}
+.acard .hint{text-align:center;margin:0 0 16px}
+.acard label{display:block;font-weight:600;font-size:.88rem;margin:12px 0 4px}
+.acard input[type=text],.acard input[type=password]{width:100%}
+.acard .opts{display:flex;justify-content:space-between;gap:10px;margin:12px 0 4px;font-size:.88rem;color:var(--mute)}
+.acard .opts label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;color:var(--mute)}
+.acard .opts input{accent-color:var(--g)}
+#aErr{margin:12px 0 0}
+.acard .sw{text-align:center;margin-top:16px;font-size:.9rem;color:var(--mute)}
+.acard .sw button{border:0;background:none;color:var(--g);font-weight:700;cursor:pointer;font-size:.9rem;padding:0 0 0 4px}
+.acard button.go:disabled{opacity:.6}
+#userbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:.8rem;margin:-6px 0 8px;flex-wrap:wrap}
+#userbar button{border:1px solid rgba(255,255,255,.7);background:transparent;color:#fff;border-radius:999px;padding:4px 12px;font-size:.8rem;font-weight:600;cursor:pointer}
+header{position:relative}
+
+.langSel{padding:5px 8px;border-radius:999px;font-size:.8rem;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+#userbar .langSel{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.7)}
+#userbar .langSel option{color:#1d2b1f}
+.acard .langrow{display:flex;justify-content:flex-end;margin-bottom:4px}
+</style>
+</head>
+<body class="locked">
+<div id="auth"><div class="acard">
+  <div class="langrow"><select class="langSel" aria-label="Language"><option value="en">English</option><option value="hi">हिन्दी</option><option value="mr">मराठी</option></select></div>
+  <div class="logo">🌱</div>
+  <h2 id="aTitle"></h2>
+  <p class="hint" id="aSub"></p>
+  <form id="aForm" novalidate>
+    <div id="aNameRow" hidden><label for="aName" data-i18n="auth.name"></label><input type="text" id="aName" autocomplete="name" data-i18n-ph="auth.namePh"></div>
+    <label for="aUser" data-i18n="auth.user"></label><input type="text" id="aUser" autocomplete="username" autocapitalize="none" spellcheck="false">
+    <label for="aPass" data-i18n="auth.pass"></label><input type="password" id="aPass" autocomplete="current-password">
+    <div id="aPass2Row" hidden><label for="aPass2" data-i18n="auth.pass2"></label><input type="password" id="aPass2" autocomplete="new-password"></div>
+    <div class="opts"><label><input type="checkbox" id="aRemember" checked> <span data-i18n="auth.keep"></span></label><label><input type="checkbox" id="aShow"> <span data-i18n="auth.show"></span></label></div>
+    <div class="err" id="aErr" hidden></div>
+    <button class="go" id="aSubmit" type="submit" style="margin-top:14px"></button>
+  </form>
+  <div class="sw"><span id="aSwitchTxt"></span><button type="button" id="aSwitch"></button></div>
+  <p class="hint" style="margin-top:14px" data-i18n="auth.local"></p>
+</div></div>
+<header>
+  <div id="userbar"><select class="langSel" aria-label="Language"><option value="en">English</option><option value="hi">हिन्दी</option><option value="mr">मराठी</option></select><span id="who"></span><button type="button" id="logoutBtn" data-i18n="auth.logout"></button></div>
+  <h1 data-i18n="hdr.title"></h1>
+  <p data-i18n="hdr.sub"></p>
+</header>
+<nav>
+  <button class="tab on" data-tab="recommend" data-i18n="tab.recommend"></button>
+  <button class="tab" data-tab="season" data-i18n="tab.season"></button>
+  <button class="tab" data-tab="about" data-i18n="tab.about"></button>
+</nav>
+<main>
+<div class="pane" id="pane-recommend">
+  <section class="card">
+    <h2 data-i18n="w.title"></h2>
+    <p class="hint" style="margin-top:0" data-i18n="w.hint"></p>
+    <div class="wrow"><button class="alt" id="geoBtn" type="button" data-i18n="w.geo"></button></div>
+    <div class="wrow"><input type="text" id="cityInput" data-i18n-ph="w.cityPh" autocomplete="off"><button class="alt" id="cityBtn" type="button" data-i18n="w.search"></button></div>
+    <div id="cityResults"></div>
+    <div class="wstatus" id="wStatus" hidden></div>
+  </section>
+  <section class="card"><h2 data-i18n="demo.title"></h2>
+    <div class="wstatus err" style="margin:0 0 10px" data-i18n="demo.warn"></div>
+    <div class="chips" id="cityPresets"></div>
+    <p class="hint" data-i18n="demo.hint"></p></section>
+  <section class="card">
+    <div class="sec" data-i18n="sec.inputs"></div>
+    <div class="grid" id="fields"></div>
+    <button class="go" id="predict" data-i18n="btn.predict"></button>
+    <div class="err" id="error" hidden></div>
+  </section>
+  <div id="result" hidden>
+    <section class="card">
+      <div class="hero"><div class="e" id="emoji"></div>
+        <div><div class="p" data-i18n="res.recommended"></div><div class="c" id="crop"></div><div class="p" id="conf"></div></div></div>
+      <div class="why" id="why"></div>
+    </section>
+    <section class="card" id="seasonCard"></section>
+    <section class="card" id="priceCard"></section>
+    <section class="card"><h2 data-i18n="res.soilAdvice"></h2><ul id="fert"></ul></section>
+    <section class="card">
+      <h2 data-i18n="fert.title"></h2>
+      <div class="areaRow"><label for="area" data-i18n="fert.size"></label>
+        <input type="number" id="area" value="1" min="0.01" step="0.01" inputmode="decimal">
+        <select id="unit"><option value="acre" data-i18n="u.acre"></option><option value="hectare" data-i18n="u.hectare"></option><option value="guntha" data-i18n="u.guntha"></option></select></div>
+      <div id="fertOut"></div>
+      <p class="hint" data-i18n="fert.hint"></p>
+    </section>
+    <section class="card"><h2 data-i18n="res.top3"></h2><div id="top3"></div></section>
+  </div>
+</div>
+
+<div class="pane" id="pane-season" hidden>
+  <section class="card">
+    <h2 data-i18n="sg.title"></h2>
+    <p data-i18n-html="sg.desc"></p>
+    <div class="chips" id="sfilters" style="margin:10px 0"></div>
+    <input type="text" id="sSearch" data-i18n-ph="sg.search" style="width:100%" autocomplete="off">
+  </section>
+  <div id="sList"></div>
+  <p class="hint" data-i18n="sg.foot"></p>
+</div>
+
+<div class="pane" id="pane-about" hidden>
+  <section class="card">
+    <h2 data-i18n="about.title"></h2>
+    <div class="stats" id="aboutStats"></div>
+    <p data-i18n-html="about.p1"></p>
+    <p data-i18n="about.p2"></p>
+  </section>
+  <section class="card"><h2 data-i18n="about.impTitle"></h2><div id="aboutImp"></div><p class="hint" data-i18n="about.impHint"></p></section>
+  <section class="card">
+    <h2 data-i18n="about.trainTitle"></h2>
+    <p id="aboutSplit"></p>
+    <p data-i18n="about.dataset"></p>
+    <p id="aboutCrops" class="hint"></p>
+  </section>
+  <section class="card">
+    <h2 data-i18n="about.limitsTitle"></h2>
+    <p data-i18n="about.limits"></p>
+  </section>
+</div>
+</main>
+<footer data-i18n="footer"></footer>
+<script src="i18n.js"></script>
+<script src="auth.js"></script>
+<script src="model.js"></script>
+<script src="crops.js"></script>
+<script src="i18n-crops.js"></script>
+<script src="prices.js"></script>
+<script src="engine.js"></script>
+<script src="logic.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

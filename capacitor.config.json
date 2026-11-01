@@ -1,0 +1,6 @@
+{
+  "appId": "com.cropadvisor.app",
+  "appName": "Crop Advisor",
+  "webDir": "www",
+  "android": { "allowMixedContent": false }
+}
